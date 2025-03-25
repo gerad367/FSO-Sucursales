@@ -27,7 +27,7 @@ void crea_sucursal(const char* ciudad, int capacidad) {
   
   if (pid != 0) return;
   
-  if(execlp("gnome-terminal", "gnome-terminal", "--wait", "--", "./mshell", ciudad, buff, NULL) == -1) {
+  if(execlp("gnome-terminal", "gnome-terminal", "--wait", "--", "./mshell", ciudad, buff, NULL)  -1) {
     printf("Ha ocurrido un error al ejecutar la sucursal.\n");
   }
 }
@@ -36,12 +36,13 @@ int main() {
   char buff[128];
   int status, capacidad;
 
-  printf("Bienvenido al sistema de gestión de sucursales.");
+  printf("Bienvenido al sistema de gestión de sucursales.\n");
   printf("Si quiere crear una nueva sucursal, introduzca el nombre de esta.\n");
   printf("Si lo que desea es salir del programa, escriba 'Salir'.\n");
   
   while (1) {
     memset(buff, 0, 128);
+    printf("\nNombre de la sucursal: ");
     scanf("%[a-zA-Z ]", buff);
 
     if (strcmp(buff, "Salir") == 0) {
@@ -50,13 +51,22 @@ int main() {
     }
 
     printf("Introduzca la capacidad de la sucursal: ");
-    scanf("%d", &capacidad);
+    if (scanf("%d", &capacidad) == EOF) {
+      printf("Error al convertir el número.");
+      continue;
+    }
+    getchar();
+
+    if (capacidad <= 0) {
+      printf("La capacidad indicada no es válida.\n");
+      sleep(1);
+      continue;
+    }
     
     crea_sucursal(buff, capacidad);
+    sleep(1);
   }
-  if (wait(&status) == -1) {
-    printf("Ha ocurrido un error con la sucursal\n");
-  }
+  while (wait(&status) > 0) {}
 
   return 0;
 }
