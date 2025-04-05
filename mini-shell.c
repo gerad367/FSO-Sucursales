@@ -4,18 +4,50 @@
 #include <unistd.h>
 #include "lib/sala.h"
 
-#define INPUTSIZE 16
+#define TOKEN_COUNT 8
+#define TOKEN_SIZE 32
 
-void read_input(char* buffer) {
+char tokens[TOKEN_COUNT][TOKEN_SIZE];
+int capacidad;
+
+// TODO
+
+int reservar();
+
+int liberar();
+
+
+
+// ----
+
+int read_input() {
   char c;
-  int i = 0;
-  memset(buffer, 0, INPUTSIZE);
-  while( (c = getchar()) != '\n' && c != EOF ) {
-    if (i == INPUTSIZE) {
-      break;
-    }
-    buffer[i++] = c;
+  int i, j;
+
+  // Limpiamos el buffer de entrada
+  for (int i = 0; i < TOKEN_COUNT; i++) {
+    memset(tokens[i], 0, TOKEN_SIZE);
   }
+
+  // Leemos la entrada del usuario
+  i = 0;
+  j = 0;
+  while( (c = getchar()) != '\n' && c != EOF ) {
+    if (i == TOKEN_SIZE) {
+      return -1;
+    }
+    if (c == ' ') {
+      j++;
+      i = 0;
+      if (j == TOKEN_COUNT) {
+        return -2;
+      }
+      continue;
+    }
+    tokens[j][i++] = c;
+  }
+  fflush(stdin);
+  return 0;
 }
 
 void print_help() {
@@ -27,8 +59,6 @@ void print_help() {
 
 int main(int argc, char** argv){
   if (argc < 3) return -1;
-  char input[INPUTSIZE];
-  int capacidad;
 
   capacidad = atoi(argv[2]);
   if (capacidad <= 0) {
@@ -48,15 +78,19 @@ int main(int argc, char** argv){
   
   while (1) {
     printf("[mini-shell@%s]$ -> ", argv[1]);
-    read_input(input);
 
-    if (strcmp(input, "quit") == 0) {
+    if (read_input() < 0) {
+      printf("Ha ocurrido un error.\nPara ver la lista de comandos válidos use 'help'.\n");
+    }
+    
+
+    if (strcmp(tokens[0], "quit") == 0) {
       printf("Saliendo del sistema.\n");
       sleep(1);
       break;
-    } else if (strcmp(input, "help") == 0) {
+    } else if (strcmp(tokens[0], "help") == 0) {
       print_help();
-    } else if (strcmp(input, "clear") == 0) {
+    } else if (strcmp(tokens[0], "clear") == 0) {
       printf("\e[1;1H\e[2J");
     }
   }
