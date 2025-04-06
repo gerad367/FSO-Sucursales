@@ -9,16 +9,43 @@
 
 char tokens[TOKEN_COUNT][TOKEN_SIZE];
 int capacidad;
+int id;
 
 // TODO
 
-int reservar();
+// Reserva <id-persona>
 
-int liberar();
+// Libera <id-persona>
+int liberar(int id_persona);
 
+// Estado-asiento <id-persona>
 
+// Estado-sala
 
 // ----
+
+void print_estado() {
+  int id_asiento;
+  if (strcmp(tokens[1], "sala") == 0) {
+    printf("La sala tiene %d asientos.\n", capacidad);
+    printf("De los cuales %d están ocupados.\n", asientos_ocupados());
+    
+  } else if (strcmp(tokens[1], "asiento") == 0) {
+    id_asiento = atoi(tokens[2]);
+    if (id_asiento <= 0 || id > capacidad) {
+      printf("ID del asiento inválido");
+      return;
+    }
+    id = estado_asiento(id_asiento);
+    if (id == 0) {
+      printf("El asiento está libre.\n");
+    } else {
+      printf("El asiento está ocupado por el usuario con id %d.\n", id);
+    }
+  } else {
+    printf("El formato del comando es:\n\testado sala\n\testado asiento id_asiento\n");
+  }
+}
 
 int read_input() {
   char c;
@@ -33,14 +60,16 @@ int read_input() {
   i = 0;
   j = 0;
   while( (c = getchar()) != '\n' && c != EOF ) {
-    if (i == TOKEN_SIZE) {
+    if (i == TOKEN_SIZE - 1) {
+      while( (c = getchar()) != '\n' && c != EOF ) {}
       return -1;
     }
     if (c == ' ') {
       j++;
       i = 0;
       if (j == TOKEN_COUNT) {
-        return -2;
+        while( (c = getchar()) != '\n' && c != EOF ) {}
+        return -1;
       }
       continue;
     }
@@ -81,8 +110,8 @@ int main(int argc, char** argv){
 
     if (read_input() < 0) {
       printf("Ha ocurrido un error.\nPara ver la lista de comandos válidos use 'help'.\n");
+      continue;
     }
-    
 
     if (strcmp(tokens[0], "quit") == 0) {
       printf("Saliendo del sistema.\n");
@@ -92,6 +121,19 @@ int main(int argc, char** argv){
       print_help();
     } else if (strcmp(tokens[0], "clear") == 0) {
       printf("\e[1;1H\e[2J");
+    } else if (strcmp(tokens[0], "reservar") == 0) {
+      id = atoi(tokens[1]);
+      if (id <= 0) {
+        printf("El formato del comando es: reservar <int id>\n");
+        continue;
+      }
+      if (reserva_asiento(id) == -1) {
+        printf("Ha ocurrido un error en la reserva.\n");
+      }
+    } else if (strcmp(tokens[0], "estado") == 0) {
+      print_estado();
+    } else {
+      printf("Comando no reconocido.\n");
     }
   }
   elimina_sala();
