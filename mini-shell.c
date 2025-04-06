@@ -168,9 +168,12 @@ int main(int argc, char** argv){
       printf("Comando no reconocido.\n");
     }
   }
-  printf("Adios\n%d\n", ppid);
+
+  union sigval val;
+  val.sival_int = (asientos_ocupados() == capacidad) ? 0 : 1;
+  sigqueue(ppid, SIGUSR1, val);
+  
   sleep(1);
   elimina_sala();
-  kill(ppid, SIGUSR1);
   return 0;
 }

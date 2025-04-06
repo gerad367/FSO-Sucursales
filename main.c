@@ -4,8 +4,12 @@
 #include <sys/wait.h>
 #include <string.h>
 
-void handler() {
-  printf("\nSe ha cerrado una sala.\n");
+void handler(int sig, siginfo_t *t, void *v) {
+  if (t->si_value.sival_int == 0) {
+    printf("\nSe ha cerrado una sala llena\n");
+  } else {
+    printf("\nSe ha cerrado una sala que no estaba llena.\n");
+  }
 }
 
 void crea_sucursal(const char* ciudad, int capacidad) {
@@ -44,7 +48,10 @@ int main() {
   char buff[128];
   int status, capacidad;
 
-  signal(SIGUSR1, handler);
+  struct sigaction sa;
+  sa.sa_flags = SA_RESTART | SA_SIGINFO;
+  sa.sa_sigaction = handler;
+  sigaction(SIGUSR1, &sa, NULL);
 
   printf("Bienvenido al sistema de gestión de sucursales.\n");
   printf("Si quiere crear una nueva sucursal, introduzca el nombre de esta.\n");
