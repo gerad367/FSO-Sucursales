@@ -9,7 +9,7 @@
 
 char tokens[TOKEN_COUNT][TOKEN_SIZE];
 int capacidad;
-int id;
+int id, id_asiento;
 
 // TODO
 
@@ -25,15 +25,18 @@ int liberar(int id_persona);
 // ----
 
 void print_estado() {
-  int id_asiento;
   if (strcmp(tokens[1], "sala") == 0) {
     printf("La sala tiene %d asientos.\n", capacidad);
     printf("De los cuales %d están ocupados.\n", asientos_ocupados());
     
   } else if (strcmp(tokens[1], "asiento") == 0) {
+    if (tokens[2][0] == 0) {
+      printf("El formato del comando es: estado asiento id_asiento\n");
+      return;
+    }
     id_asiento = atoi(tokens[2]);
-    if (id_asiento <= 0 || id > capacidad) {
-      printf("ID del asiento inválido");
+    if (id_asiento <= 0 || id_asiento > capacidad) {
+      printf("ID del asiento inválido.\n");
       return;
     }
     id = estado_asiento(id_asiento);
@@ -45,6 +48,16 @@ void print_estado() {
   } else {
     printf("El formato del comando es:\n\testado sala\n\testado asiento id_asiento\n");
   }
+}
+
+int liberar(int id_persona) {
+  for (int i = 1; i <= capacidad; i++) {
+    if (estado_asiento(i) == id_persona) {
+      libera_asiento(i);
+      return i;
+    }
+  }
+  return -1;
 }
 
 int read_input() {
@@ -84,6 +97,10 @@ void print_help() {
   printf("\t- help -> Muestra ayuda para usar el shell.\n");
   printf("\t- quit -> Salir del programa.\n");
   printf("\t- clear -> Limpia la pantalla.\n");
+  printf("\t- reservar id_persona -> Reserva, si se puede, un asiento para la persona con el id indicado.\n");
+  printf("\t- estado sala -> Muestra información sobre el estado de la sala.\n");
+  printf("\t- estado asiento id_asiento -> Muestra información sobre el estado del asiento indicado.\n");
+  printf("\t- liberar id_persona -> Libera el primer asiento encontrado ocupado por la persona indicada.\n");
 }
 
 int main(int argc, char** argv){
@@ -127,11 +144,23 @@ int main(int argc, char** argv){
         printf("El formato del comando es: reservar <int id>\n");
         continue;
       }
-      if (reserva_asiento(id) == -1) {
+      if ((id_asiento = reserva_asiento(id)) == -1) {
         printf("Ha ocurrido un error en la reserva.\n");
+        continue;
       }
+      printf("Se ha reservado el asiento %d al usuario con ID %d.\n", id_asiento, id);
     } else if (strcmp(tokens[0], "estado") == 0) {
       print_estado();
+    } else if (strcmp(tokens[0], "liberar") == 0) {
+      if (tokens[1][0] == 0 || (id = atoi(tokens[1])) == 0) {
+        printf("El formato del comando es: liberar id_persona\n");
+        continue;
+      }
+      if ((id_asiento = liberar(id)) == -1) {
+        printf("No se ha liberado ningún asiento.\n");
+      } else {
+        printf("Se ha liberado el asiento %d.\n", id_asiento);
+      }
     } else {
       printf("Comando no reconocido.\n");
     }
