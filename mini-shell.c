@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include "lib/sala.h"
 
 #define TOKEN_COUNT 8
@@ -104,8 +105,10 @@ void print_help() {
 }
 
 int main(int argc, char** argv){
-  if (argc < 3) return -1;
+  if (argc < 4) return -1;
 
+  int ppid = atoi(argv[3]);
+  
   capacidad = atoi(argv[2]);
   if (capacidad <= 0) {
     printf("El valor de la capacidad no es válido.\n");
@@ -165,6 +168,9 @@ int main(int argc, char** argv){
       printf("Comando no reconocido.\n");
     }
   }
+  printf("Adios\n%d\n", ppid);
+  sleep(1);
   elimina_sala();
+  kill(ppid, SIGUSR1);
   return 0;
 }
