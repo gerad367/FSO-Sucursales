@@ -1,23 +1,46 @@
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <string.h>
 
+#define MAX_LEN_NAME 128
+#define MAX_SIZE_BUFF 8
+
 void handler(int sig, siginfo_t *t, void *v) {
+  int fd = open("fifo", O_RDONLY);
+  if (fd == -1) {
+    perror("Error al abrir el FIFO");
+    exit(-1);
+  }
+  char* name = malloc(MAX_LEN_NAME);
+  if (name == NULL) {
+    perror("Error al reservar memoria dinámica");
+    exit(-1);
+  }
+  if (read(fd, name, MAX_LEN_NAME) == -1) {
+    perror("Error al leer el nombre de la sala");
+    exit(-1);
+  }
+  close(fd);
+  printf("Se ha cerrado la sala %s.\n", name);
   if (t->si_value.sival_int == 0) {
-    printf("\nSe ha cerrado una sala llena\n");
+    printf("La sala estaba llena.\n");
   } else {
-    printf("\nSe ha cerrado una sala que no estaba llena.\n");
+    printf("la sala no estaba llena.\n");
   }
 }
 
 void crea_sucursal(const char* ciudad, int capacidad) {
-  char buff_cap[8];
-  char buff_pid[8];
+  char buff_cap[MAX_SIZE_BUFF];
+  char buff_pid[MAX_SIZE_BUFF];
   pid_t pid;
-  memset(buff_cap, 0, 8);
-  memset(buff_pid, 0, 8);
+  memset(buff_cap, 0, MAX_SIZE_BUFF);
+  memset(buff_pid, 0, MAX_SIZE_BUFF);
   // Comprobamos los parámetros de la sucursal
   if (capacidad <= 0 || sprintf(buff_cap, "%d", capacidad) < 0) {
     printf("Valor de capacidad inválido.\n");
@@ -45,8 +68,10 @@ void crea_sucursal(const char* ciudad, int capacidad) {
 }
 
 int main() {
-  char buff[128];
+  char buff[MAX_LEN_NAME];
   int status, capacidad;
+
+  mkfifo("fifo", 0777);
 
   struct sigaction sa;
   sa.sa_flags = SA_RESTART | SA_SIGINFO;
@@ -58,7 +83,7 @@ int main() {
   printf("Si lo que desea es salir del programa, escriba 'Salir'.\n");
   
   while (1) {
-    memset(buff, 0, 128);
+    memset(buff, 0, MAX_LEN_NAME);
     printf("\nNombre de la sucursal: ");
     scanf("%[a-zA-Z ]", buff);
 

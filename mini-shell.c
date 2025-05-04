@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <fcntl.h>
 #include "lib/sala.h"
 
 #define TOKEN_COUNT 8
@@ -12,18 +13,7 @@ char tokens[TOKEN_COUNT][TOKEN_SIZE];
 int capacidad;
 int id, id_asiento;
 
-// TODO
-
-// Reserva <id-persona>
-
-// Libera <id-persona>
 int liberar(int id_persona);
-
-// Estado-asiento <id-persona>
-
-// Estado-sala
-
-// ----
 
 void print_estado() {
   if (strcmp(tokens[1], "sala") == 0) {
@@ -168,12 +158,29 @@ int main(int argc, char** argv){
       printf("Comando no reconocido.\n");
     }
   }
-
   union sigval val;
   val.sival_int = (asientos_ocupados() == capacidad) ? 0 : 1;
-  sigqueue(ppid, SIGUSR1, val);
+  // printf("La dirección de memoria del nombre de la sala es %s, %p\n", argv[4], (void*)atol(argv[4]));
+  // val.sival_ptr = (void*) atol(argv[4]);
+  if (sigqueue(ppid, SIGUSR1, val) == -1) {
+    perror("error al mandar la señal");
+    getchar();
+  }
+
+  int fd = open("fifo", O_WRONLY);
+  if (fd == -1) {
+    perror("Error al abrir el FIFO");
+    exit(-1);
+  }
+
+  if (write(fd, argv[1], strlen(argv[1])) == -1) {
+    perror("No se ha podido enviar el nombre de la sala");
+    exit(-1);
+  }
+
+  close(fd);
   
-  sleep(1);
+  // getchar();
   elimina_sala();
   return 0;
 }
